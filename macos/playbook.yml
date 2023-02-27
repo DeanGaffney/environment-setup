@@ -1,0 +1,41 @@
+- name: Install software
+  hosts: localhost 
+  become: false 
+# https://gist.github.com/mrlesmithjr/f3c15fdd53020a71f55c2032b8be2eda
+  # install neovim using neovim config in github
+  pre_tasks:
+    - name: Ensure Homebrew is installed
+      stat:
+        path: /usr/local/bin/brew
+      register: homebrew_check
+
+    - name: Fail if Homebrew is not installed
+      fail:
+        msg: Homebrew is missing, run setup using setup.sh
+      when:
+        - not homebrew_check.stat.exists
+  
+  tasks:
+    - name: Install Homebrew packages
+      community.general.homebrew:
+        name:
+          - jq
+          - cfn-lint
+          - nvm
+          - pyenv
+          - rust
+          - openjdk@11
+          - openjdk@17
+          - awscli
+          - docker
+          - zsh
+        state: present
+
+# need a task to setup github
+# need a task to install node using nvm
+# need a task to install python using pyenv
+# task to install all dependencies that neovim uses
+# need a task to install neovim
+# need a task to install oh-my-zsh
+# need a task to apply dotfiles for zsh
+# task for setting PATH in zsh file?
