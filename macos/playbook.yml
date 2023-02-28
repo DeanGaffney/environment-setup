@@ -48,6 +48,8 @@
         - docker
         - zsh
         - nvm
+        - gh
+        - tmux
       state: present
 
     - name: Install Homebrew casks
@@ -106,7 +108,5 @@
       ansible.builtin.shell: >
         bash "{{ ansible_env.HOME }}/.config/nvim/install.sh"
 
-
-# need a task to setup github
 # need a task to apply dotfiles for zsh
 # Task for setting up aws cli config
