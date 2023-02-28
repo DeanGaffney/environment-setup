@@ -1,8 +1,20 @@
 - name: Install software
   hosts: localhost 
   become: false 
-# https://gist.github.com/mrlesmithjr/f3c15fdd53020a71f55c2032b8be2eda
-  # install neovim using neovim config in github
+  vars:
+    node_versions:
+      - version: 14.21.3
+      - version: 16.16.0
+        default: true
+      - version: 18.14.2
+    python_versions:
+      - version: 3.10.6
+        default: true
+    java_versions:
+      - version: openjdk@11
+      - version: openjdk@17
+        default: true
+
   pre_tasks:
     - name: Ensure Homebrew is installed
       stat:
@@ -16,26 +28,85 @@
         - not homebrew_check.stat.exists
   
   tasks:
+    - name: Install x-code tools
+      ansible.builtin.shell: xcode-select --install || return 0
+
     - name: Install Homebrew packages
       community.general.homebrew:
+        - ninja
+        - libtool 
+        - cmake 
+        - pkg-config 
+        - gettext 
+        - curl
+        - rust
+        - go
+        - pyenv
+        - jq
+        - cfn-lint
+        - awscli
+        - docker
+        - zsh
+        - nvm
+      state: present
+
+    - name: Install Homebrew casks
+      community.general.homebrew_cask:
         name:
-          - jq
-          - cfn-lint
-          - nvm
-          - pyenv
-          - rust
-          - openjdk@11
-          - openjdk@17
-          - awscli
-          - docker
-          - zsh
+          - visual-studio-code
         state: present
 
+    - name: Install oh-my-zsh
+      ansible.builtin.shell: >
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+    - name: Install Java Versions
+      community.general.homebrew:
+        name: "{{ item.version }}"
+      with_items: "{{ java_versions }}"
+      state: present
+
+    - name: Set Default Java Version
+      ansible.builtin.shell: >
+        # set the java path if one is not already set
+        if [ ! grep "{{ item.version }}" {{ ansible_env.HOME }}/.zshrc ]; then
+          echo "export Path /usr/local/opt/{{ item.version }}/bin:$PATH" >> {{ ansible_env.HOME }}/.zshrc
+        fi 
+      with_items: "{{ java_versions }}"
+      when: item.default == true
+
+    - name: Install Node Versions
+      ansible.builtin.shell: >
+        nvm install {{ item.version }}
+      with_items: "{{ node_versions }}"
+
+    - name: Set Default Node Version
+      ansible.builtin.shell: >
+        nvm alias default {{ item.version }}
+      with_items: "{{ node_versions }}"
+      when: item.default == true
+
+    - name: Install Python Versions
+      ansible.builtin.shell: >
+        pyenv install {{ item.version }}
+      with_items: "{{ python_versions }}"
+
+    - name: Set Default Python Version
+      ansible.builtin.shell: >
+        pyenv global {{ item.version }}
+      with_items: "{{ node_versions }}"
+      when: item.default == true
+
+    - name: Get Neovim Config
+      ansible.builtin.git:
+        repo: 'git@github.com:DeanGaffney/neovim-config.git'
+        dest: "{{ ansible_env.HOME }}/.config/nvim"
+
+    - name: Install Neovim
+      ansible.builtin.shell: >
+        bash "{{ ansible_env.HOME }}/.config/nvim/install.sh"
+
+
 # need a task to setup github
-# need a task to install node using nvm
-# need a task to install python using pyenv
-# task to install all dependencies that neovim uses
-# need a task to install neovim
-# need a task to install oh-my-zsh
 # need a task to apply dotfiles for zsh
-# task for setting PATH in zsh file?
+# Task for setting up aws cli config

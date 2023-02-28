@@ -1,4 +1,18 @@
 #!/bin/bash
+#
+read -rp "Did you setup your Github SSH Keys? (yes/no) " yn
+
+case $yn in
+y | yes) echo "Ok, proceeding with setup" ;;
+n | no)
+  echo "Do that first and then re-run this script. Exiting... "
+  exit 1
+  ;;
+*)
+  echo invalid response
+  exit 1
+  ;;
+esac
 
 # Check if Homebrew is installed
 if ! which -s brew; then
