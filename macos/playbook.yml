@@ -16,23 +16,27 @@
         default: true
 
   pre_tasks:
-    - name: Ensure Homebrew is installed
-      stat:
-        path: /usr/local/bin/brew
-      register: homebrew_check
+  - name: Ensure Homebrew is installed
+    stat:
+      path: /usr/local/bin/brew
+    register: homebrew_check
 
-    - name: Fail if Homebrew is not installed
-      fail:
-        msg: Homebrew is missing, run setup using setup.sh
-      when:
-        - not homebrew_check.stat.exists
+  - name: Fail if Homebrew is not installed
+    fail:
+      msg: Homebrew is missing, run setup using setup.sh
+    when:
+      - not homebrew_check.stat.exists
   
   tasks:
-    - name: Install x-code tools
-      ansible.builtin.shell: xcode-select --install || return 0
+  - name: Install oh-my-zsh
+    ansible.builtin.shell: >
+      which zsh || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    tags:
+      - zsh
 
-    - name: Install Homebrew packages
-      community.general.homebrew:
+  - name: Install Homebrew packages
+    community.general.homebrew:
+      name: 
         - ninja
         - libtool 
         - cmake 
@@ -51,62 +55,77 @@
         - gh
         - tmux
       state: present
+    tags:
+      - homebrew
 
-    - name: Install Homebrew casks
-      community.general.homebrew_cask:
-        name:
-          - visual-studio-code
-        state: present
-
-    - name: Install oh-my-zsh
-      ansible.builtin.shell: >
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-    - name: Install Java Versions
-      community.general.homebrew:
-        name: "{{ item.version }}"
-      with_items: "{{ java_versions }}"
+  - name: Install Homebrew casks
+    community.general.homebrew_cask:
+      name:
+        - visual-studio-code
       state: present
+    tags:
+      - homebrew
 
-    - name: Set Default Java Version
-      ansible.builtin.shell: >
-        # set the java path if one is not already set
-        if [ ! grep "{{ item.version }}" {{ ansible_env.HOME }}/.zshrc ]; then
-          echo "export Path /usr/local/opt/{{ item.version }}/bin:$PATH" >> {{ ansible_env.HOME }}/.zshrc
-        fi 
-      with_items: "{{ java_versions }}"
-      when: item.default == true
+  - name: Install Java Versions
+    community.general.homebrew:
+      name: "{{ item.version }}"
+      state: present
+    with_items: "{{ java_versions }}"
+    tags: 
+      - java
 
-    - name: Install Node Versions
-      ansible.builtin.shell: >
-        nvm install {{ item.version }}
-      with_items: "{{ node_versions }}"
+  - name: Set Default Java Version
+    ansible.builtin.shell: >
+      if ! grep "{{ item.version }}" {{ ansible_env.HOME }}/.zshrc; then
+        echo "export PATH=/usr/local/opt/{{ item.version }}/bin:$PATH" >> {{ ansible_env.HOME }}/.zshrc
+      fi
+    with_items: "{{ java_versions }}"
+    when: item.default is defined and item.default == true
+    tags:
+      - java
+      - zsh
 
-    - name: Set Default Node Version
-      ansible.builtin.shell: >
-        nvm alias default {{ item.version }}
-      with_items: "{{ node_versions }}"
-      when: item.default == true
+  - name: Install Node Versions
+    ansible.builtin.shell: >
+      source {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ item.version }}
+    with_items: "{{ node_versions }}"
+    tags:
+    - nodejs
 
-    - name: Install Python Versions
-      ansible.builtin.shell: >
+  - name: Set Default Node Version
+    ansible.builtin.shell: >
+      source {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm alias default {{ item.version }}
+    with_items: "{{ node_versions }}"
+    when: item.default is defined and item.default == true
+    tags:
+      - nodejs
+
+  - name: Install Python Versions
+    ansible.builtin.shell: >
+      if ! ls {{ ansible_env.HOME }}/.pyenv/versions | grep {{ item.version }}; then
         pyenv install {{ item.version }}
-      with_items: "{{ python_versions }}"
+      fi
+    with_items: "{{ python_versions }}"
+    tags:
+      - python
 
-    - name: Set Default Python Version
-      ansible.builtin.shell: >
-        pyenv global {{ item.version }}
-      with_items: "{{ node_versions }}"
-      when: item.default == true
+  - name: Set Default Python Version
+    ansible.builtin.shell: >
+      pyenv global {{ item.version }}
+    with_items: "{{ python_versions }}"
+    when: item.default is defined and item.default == true
+    tags:
+      - python
 
-    - name: Get Neovim Config
-      ansible.builtin.git:
-        repo: 'git@github.com:DeanGaffney/neovim-config.git'
-        dest: "{{ ansible_env.HOME }}/.config/nvim"
+  - name: Get Neovim Config
+    ansible.builtin.git:
+      repo: 'git@github.com:DeanGaffney/neovim-config.git'
+      dest: "{{ ansible_env.HOME }}/.config/nvim"
+    tags:
+      - neovim
 
-    - name: Install Neovim
-      ansible.builtin.shell: >
-        bash "{{ ansible_env.HOME }}/.config/nvim/install.sh"
-
-# need a task to apply dotfiles for zsh
-# Task for setting up aws cli config
+  - name: Install Neovim
+    ansible.builtin.shell: >
+      bash "{{ ansible_env.HOME }}/.config/nvim/install.sh"
+    tags:
+      - neovim
