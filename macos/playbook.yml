@@ -62,6 +62,8 @@
     community.general.homebrew_cask:
       name:
         - visual-studio-code
+        - google-chrome
+        - postman
       state: present
     tags:
       - homebrew
