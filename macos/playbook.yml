@@ -64,6 +64,7 @@
         - visual-studio-code
         - google-chrome
         - postman
+        - alacritty
       state: present
     tags:
       - homebrew
