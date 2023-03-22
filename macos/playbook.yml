@@ -2,6 +2,7 @@
   hosts: localhost 
   become: false 
   vars:
+    workspace_directory: "{{ ansible_env.HOME }}/workspace"
     node_versions:
       - version: 14.21.3
       - version: 16.16.0
@@ -16,11 +17,6 @@
         default: true
 
   pre_tasks:
-  - name: Ensure Homebrew is installed
-    stat:
-      path: /usr/local/bin/brew
-    register: homebrew_check
-
   - name: Fail if Homebrew is not installed
     fail:
       msg: Homebrew is missing, run setup using setup.sh
@@ -28,11 +24,49 @@
       - not homebrew_check.stat.exists
   
   tasks:
+  - name: Ensure workspace directory exists
+    file:
+      path: "{{ workspace_directory }}"
+      state: directory
+    tags:
+    - workspace
+
+  - name: Get dotfiles
+    ansible.builtin.git:
+      repo: 'git@github.com:DeanGaffney/dotfiles.git'
+      dest: "{{ workspace_directory }}/dotfiles"
+    tags:
+      - dotfiles
+      - tmux
+      - zsh
+
   - name: Install oh-my-zsh
     ansible.builtin.shell: >
       which zsh || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     tags:
       - zsh
+
+  - name: Link dotfiles
+    ansible.builtin.shell: >
+        bash "{{ workspace_directory }}/dotfiles/link.sh"
+    tags:
+      - dotfiles
+      - tmux
+      - zsh
+
+  - name: Get tmux plugin manager
+    ansible.builtin.git:
+      repo: https://github.com/tmux-plugins/tpm
+      dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    tags:
+      - tmux
+
+  - name: Get Neovim Config
+    ansible.builtin.git:
+      repo: 'git@github.com:DeanGaffney/neovim-config.git'
+      dest: "{{ ansible_env.HOME }}/.config/nvim"
+    tags:
+      - neovim
 
   - name: Install Homebrew packages
     community.general.homebrew:
@@ -65,6 +99,7 @@
         - google-chrome
         - postman
         - alacritty
+        - rectangle
       state: present
     tags:
       - homebrew
@@ -119,13 +154,6 @@
     when: item.default is defined and item.default == true
     tags:
       - python
-
-  - name: Get Neovim Config
-    ansible.builtin.git:
-      repo: 'git@github.com:DeanGaffney/neovim-config.git'
-      dest: "{{ ansible_env.HOME }}/.config/nvim"
-    tags:
-      - neovim
 
   - name: Install Neovim
     ansible.builtin.shell: >
