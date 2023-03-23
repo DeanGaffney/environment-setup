@@ -24,6 +24,14 @@
       - not homebrew_check.stat.exists
   
   tasks:
+  - name: Install Prerequisites
+    community.general.homebrew:
+      name:
+        - stow
+      state: present
+    tags:
+      - homebrew
+
   - name: Ensure workspace directory exists
     file:
       path: "{{ workspace_directory }}"
@@ -39,6 +47,7 @@
       - dotfiles
       - tmux
       - zsh
+      - git
 
   - name: Install oh-my-zsh
     ansible.builtin.shell: >
@@ -48,7 +57,7 @@
 
   - name: Link dotfiles
     ansible.builtin.shell: >
-        bash "{{ workspace_directory }}/dotfiles/link.sh"
+        cd "{{ workspace_directory }}/dotfiles" && stow --adopt .
     tags:
       - dotfiles
       - tmux
@@ -60,6 +69,7 @@
       dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
     tags:
       - tmux
+      - git
 
   - name: Get Neovim Config
     ansible.builtin.git:
@@ -67,6 +77,7 @@
       dest: "{{ ansible_env.HOME }}/.config/nvim"
     tags:
       - neovim
+      - git
 
   - name: Install Homebrew packages
     community.general.homebrew:
@@ -115,7 +126,8 @@
   - name: Set Default Java Version
     ansible.builtin.lineinfile:
       path: "{{ ansible_env.HOME }}/.zshrc"
-      string_search: "export PATH=/usr/local/opt/{{ item.version }}/bin:$PATH"
+      search_string: 'export PATH="/usr/local/opt/{{ item.version }}/bin:$PATH"'
+      line:  'export PATH="/usr/local/opt/{{ item.version }}/bin:$PATH"'
     with_items: "{{ java_versions }}"
     when: item.default is defined and item.default == true
     tags:
