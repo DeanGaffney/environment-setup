@@ -17,6 +17,11 @@
         default: true
 
   pre_tasks:
+  - name: Ensure Homebrew is installed
+    stat:
+      path: /usr/local/bin/brew
+    register: homebrew_check
+
   - name: Fail if Homebrew is not installed
     fail:
       msg: Homebrew is missing, run setup using setup.sh
@@ -28,6 +33,8 @@
     community.general.homebrew:
       name:
         - stow
+        - git
+        - curl
       state: present
     tags:
       - homebrew
@@ -87,7 +94,6 @@
         - cmake 
         - pkg-config 
         - gettext 
-        - curl
         - rust
         - go
         - pyenv
