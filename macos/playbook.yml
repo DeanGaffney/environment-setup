@@ -95,6 +95,8 @@
         - nvm
         - gh
         - tmux
+        - codespell
+        - shellcheck
       state: present
     tags:
       - homebrew
