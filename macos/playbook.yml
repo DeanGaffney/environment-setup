@@ -126,8 +126,8 @@
   - name: Set Default Java Version
     ansible.builtin.lineinfile:
       path: "{{ ansible_env.HOME }}/.zshrc"
-      search_string: 'export PATH="/usr/local/opt/{{ item.version }}/bin:$PATH"'
-      line:  'export PATH="/usr/local/opt/{{ item.version }}/bin:$PATH"'
+      search_string: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
+      line:  'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
     with_items: "{{ java_versions }}"
     when: item.default is defined and item.default == true
     tags:
