@@ -4,7 +4,6 @@
   vars:
     workspace_directory: "{{ ansible_env.HOME }}/workspace"
     node_versions:
-      - version: 14.21.3
       - version: 16.16.0
         default: true
       - version: 18.14.2
@@ -15,18 +14,6 @@
       - version: openjdk@11
       - version: openjdk@17
         default: true
-
-  pre_tasks:
-  - name: Ensure Homebrew is installed
-    stat:
-      path: /usr/local/bin/brew
-    register: homebrew_check
-
-  - name: Fail if Homebrew is not installed
-    fail:
-      msg: Homebrew is missing, run setup using setup.sh
-    when:
-      - not homebrew_check.stat.exists
   
   tasks:
   - name: Install Prerequisites
@@ -48,7 +35,7 @@
 
   - name: Get dotfiles
     ansible.builtin.git:
-      repo: 'git@github.com:DeanGaffney/dotfiles.git'
+      repo: 'https://github.com/DeanGaffney/dotfiles.git'
       dest: "{{ workspace_directory }}/dotfiles"
     tags:
       - dotfiles
@@ -59,12 +46,15 @@
   - name: Install oh-my-zsh
     ansible.builtin.shell: >
       which zsh || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
+      git clone https://github.com/jeffreytse/zsh-vi-mode ~/.oh-my-zsh/plugins/zsh-vi-mode
+      git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
     tags:
       - zsh
 
   - name: Link dotfiles
     ansible.builtin.shell: >
-        cd "{{ workspace_directory }}/dotfiles" && stow --adopt .
+        cd "{{ workspace_directory }}" && stow --adopt dotfiles 
     tags:
       - dotfiles
       - tmux
@@ -80,7 +70,7 @@
 
   - name: Get Neovim Config
     ansible.builtin.git:
-      repo: 'git@github.com:DeanGaffney/neovim-config.git'
+      repo: 'https://github.com/DeanGaffney/neovim-config.git'
       dest: "{{ ansible_env.HOME }}/.config/nvim"
     tags:
       - neovim
@@ -105,12 +95,21 @@
         - nvm
         - gh
         - tmux
+      state: present
+    tags:
+      - homebrew
+
+  - name: Install Homebrew casks
+    community.general.homebrew_cask:
+      name: 
         - visual-studio-code
         - google-chrome
         - postman
         - alacritty
         - rectangle
+        - font-hack-nerd-font
       state: present
+      accept_external_apps: true
     tags:
       - homebrew
 
@@ -135,14 +134,14 @@
 
   - name: Install Node Versions
     ansible.builtin.shell: >
-      source {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ item.version }}
+      source /opt/homebrew/opt/nvm/nvm.sh && nvm install {{ item.version }}
     with_items: "{{ node_versions }}"
     tags:
     - nodejs
 
   - name: Set Default Node Version
     ansible.builtin.shell: >
-      source {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm alias default {{ item.version }}
+      source /opt/homebrew/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
     with_items: "{{ node_versions }}"
     when: item.default is defined and item.default == true
     tags:
