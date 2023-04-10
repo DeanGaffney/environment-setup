@@ -110,6 +110,7 @@
         - alacritty
         - rectangle
         - font-hack-nerd-font
+        - spotify
       state: present
       accept_external_apps: true
     tags:
