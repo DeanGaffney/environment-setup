@@ -97,6 +97,7 @@
         - tmux
         - codespell
         - shellcheck
+        - maven
       state: present
     tags:
       - homebrew
