@@ -98,6 +98,7 @@
         - codespell
         - shellcheck
         - maven
+        - jenv
       state: present
     tags:
       - homebrew
