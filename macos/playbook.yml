@@ -91,6 +91,7 @@
         - cfn-lint
         - awscli
         - docker
+        - docker-compose
         - zsh
         - nvm
         - gh
