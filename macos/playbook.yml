@@ -100,6 +100,7 @@
         - shellcheck
         - maven
         - jenv
+        - google-java-format
       state: present
     tags:
       - homebrew
