@@ -45,12 +45,18 @@
 
   - name: Install oh-my-zsh
     ansible.builtin.shell: >
-      which zsh || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
       git clone https://github.com/jeffreytse/zsh-vi-mode ~/.oh-my-zsh/plugins/zsh-vi-mode
       git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
     tags:
       - zsh
+
+  - name: Tap font casks
+    ansible.builtin.shell: >
+      brew tap homebrew/cask-fonts
+    tags:
+      - homebrew
 
   - name: Link dotfiles
     ansible.builtin.shell: >
