@@ -75,7 +75,9 @@
       - homebrew
 
   - name: Link dotfiles
-    ansible.builtin.script: "{{ personal_directory }}/dotfiles/install.sh"
+    ansible.builtin.script:
+      chdir: "{{ personal_directory }}/dotfiles"
+      cmd: "install.sh"
     tags:
       - dotfiles
       - tmux
@@ -194,6 +196,8 @@
       - python
 
   - name: Install Neovim
-    ansible.builtin.script: "{{ ansible_env.HOME }}/.config/nvim/install.sh"
+    ansible.builtin.script: 
+      chdir: "{{ ansible_env.HOME }}/.config/nvim"
+      cmd: "install.sh"
     tags:
       - neovim
