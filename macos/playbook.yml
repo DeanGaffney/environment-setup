@@ -121,6 +121,7 @@
         - rectangle
         - font-hack-nerd-font
         - spotify
+        - intellij-idea-ce
       state: present
       accept_external_apps: true
     tags:
@@ -178,7 +179,6 @@
       - python
 
   - name: Install Neovim
-    ansible.builtin.shell: >
-      bash "{{ ansible_env.HOME }}/.config/nvim/install.sh"
+    ansible.builtin.script: "{{ ansible_env.HOME }}/.config/nvim/install.sh"
     tags:
       - neovim

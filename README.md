@@ -7,6 +7,6 @@ A repository that sets up my working environment using ansible
 ## MacoOS
 - Run the following to setup an environment on macos:
 ```bash
-bash macos/setup.sh`
+cd macos && bash ./setup.sh`
 ```
 
