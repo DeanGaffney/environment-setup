@@ -3,6 +3,8 @@
   become: false 
   vars:
     workspace_directory: "{{ ansible_env.HOME }}/workspace"
+    personal_directory: "{{ ansible_env.HOME }}/workspace/personal"
+    work_directory: "{{ ansible_env.HOME }}/workspace/work"
     node_versions:
       - version: 16.16.0
         default: true
@@ -33,10 +35,24 @@
     tags:
     - workspace
 
+  - name: Ensure workspace personal directory exists
+    file:
+      path: "{{ personal_directory }}"
+      state: directory
+    tags:
+    - workspace
+
+  - name: Ensure workspace work directory exists
+    file:
+      path: "{{ work_directory }}"
+      state: directory
+    tags:
+    - workspace
+
   - name: Get dotfiles
     ansible.builtin.git:
       repo: 'https://github.com/DeanGaffney/dotfiles.git'
-      dest: "{{ workspace_directory }}/dotfiles"
+      dest: "{{ personal_directory }}/dotfiles"
     tags:
       - dotfiles
       - tmux
@@ -59,8 +75,7 @@
       - homebrew
 
   - name: Link dotfiles
-    ansible.builtin.shell: >
-        cd "{{ workspace_directory }}" && stow --adopt dotfiles 
+    ansible.builtin.script: "{{ personal_directory }}/dotfiles/install.sh"
     tags:
       - dotfiles
       - tmux
