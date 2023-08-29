@@ -124,6 +124,7 @@
         - maven
         - jenv
         - google-java-format
+        - fzf
       state: present
     tags:
       - homebrew
