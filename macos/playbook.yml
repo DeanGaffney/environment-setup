@@ -206,10 +206,9 @@
     tags:
       - neovim
 
-  - name: Install Emacs
-    ansible.builtin.shell: >
-      brew install emacs-plus --with-native-comp --with-modern-doom-icon
-      git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
-      ~/.config/emacs/bin/doom install --install --env --config --fonts
+  - name: Ensure notes directory exists
+    file:
+      path: "{{ ansible_env.HOME }}/notes"
+      state: directory
     tags:
-      - emacs
+    - notes
