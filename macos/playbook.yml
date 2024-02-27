@@ -24,6 +24,7 @@
         - stow
         - git
         - curl
+        - httpie
       state: present
     tags:
       - homebrew
