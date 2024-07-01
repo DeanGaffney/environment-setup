@@ -7,10 +7,12 @@
     work_directory: "{{ ansible_env.HOME }}/workspace/work"
     node_versions:
       - version: 16.16.0
-        default: true
       - version: 18.14.2
+      - version: 20.9.0
+        default: true
     python_versions:
       - version: 3.10.6
+      - version: 3.11.4
         default: true
     java_versions:
       - version: openjdk@11
@@ -129,6 +131,7 @@
         - fzf
         - ripgrep
         - fd
+        - git-delta
       state: present
     tags:
       - homebrew
