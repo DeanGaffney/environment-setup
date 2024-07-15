@@ -132,6 +132,7 @@
         - ripgrep
         - fd
         - git-delta
+        - lazygit
       state: present
     tags:
       - homebrew
