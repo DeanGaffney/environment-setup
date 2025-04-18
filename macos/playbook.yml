@@ -1,6 +1,6 @@
 - name: Install software
-  hosts: localhost 
-  become: false 
+  hosts: localhost
+  become: false
   vars:
     workspace_directory: "{{ ansible_env.HOME }}/workspace"
     personal_directory: "{{ ansible_env.HOME }}/workspace/personal"
@@ -18,202 +18,203 @@
       - version: openjdk@11
       - version: openjdk@17
         default: true
-  
+
   tasks:
-  - name: Install Prerequisites
-    community.general.homebrew:
-      name:
-        - stow
-        - git
-        - curl
-        - httpie
-      state: present
-    tags:
-      - homebrew
+    - name: Install Prerequisites
+      community.general.homebrew:
+        name:
+          - stow
+          - git
+          - curl
+          - httpie
+        state: present
+      tags:
+        - homebrew
 
-  - name: Ensure workspace directory exists
-    file:
-      path: "{{ workspace_directory }}"
-      state: directory
-    tags:
-    - workspace
+    - name: Ensure workspace directory exists
+      file:
+        path: "{{ workspace_directory }}"
+        state: directory
+      tags:
+        - workspace
 
-  - name: Ensure workspace personal directory exists
-    file:
-      path: "{{ personal_directory }}"
-      state: directory
-    tags:
-    - workspace
+    - name: Ensure workspace personal directory exists
+      file:
+        path: "{{ personal_directory }}"
+        state: directory
+      tags:
+        - workspace
 
-  - name: Ensure workspace work directory exists
-    file:
-      path: "{{ work_directory }}"
-      state: directory
-    tags:
-    - workspace
+    - name: Ensure workspace work directory exists
+      file:
+        path: "{{ work_directory }}"
+        state: directory
+      tags:
+        - workspace
 
-  - name: Get dotfiles
-    ansible.builtin.git:
-      repo: 'https://github.com/DeanGaffney/dotfiles.git'
-      dest: "{{ personal_directory }}/dotfiles"
-    tags:
-      - dotfiles
-      - tmux
-      - zsh
-      - git
-
-  - name: Install oh-my-zsh
-    ansible.builtin.shell: >
-      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-      git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
-      git clone https://github.com/jeffreytse/zsh-vi-mode ~/.oh-my-zsh/plugins/zsh-vi-mode
-      git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
-    tags:
-      - zsh
-
-  - name: Tap casks
-    ansible.builtin.shell: >
-      brew tap homebrew/cask-fonts
-      brew tap d12frosted/emacs-plus
-    tags:
-      - homebrew
-
-  - name: Link dotfiles
-    ansible.builtin.script:
-      chdir: "{{ personal_directory }}/dotfiles"
-      cmd: "install.sh"
-    tags:
-      - dotfiles
-      - tmux
-      - zsh
-
-  - name: Get tmux plugin manager
-    ansible.builtin.git:
-      repo: https://github.com/tmux-plugins/tpm
-      dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
-    tags:
-      - tmux
-      - git
-
-  - name: Get Neovim Config
-    ansible.builtin.git:
-      repo: 'https://github.com/DeanGaffney/neovim-config.git'
-      dest: "{{ ansible_env.HOME }}/.config/nvim"
-    tags:
-      - neovim
-      - git
-
-  - name: Install Homebrew packages
-    community.general.homebrew:
-      name: 
-        - ninja
-        - libtool 
-        - cmake 
-        - pkg-config 
-        - gettext 
-        - rust
-        - go
-        - pyenv
-        - jq
-        - cfn-lint
-        - awscli
-        - docker
-        - docker-compose
-        - zsh
-        - nvm
-        - gh
+    - name: Get dotfiles
+      ansible.builtin.git:
+        repo: "https://github.com/DeanGaffney/dotfiles.git"
+        dest: "{{ personal_directory }}/dotfiles"
+      tags:
+        - dotfiles
         - tmux
-        - codespell
-        - shellcheck
-        - maven
-        - jenv
-        - google-java-format
-        - fzf
-        - ripgrep
-        - fd
-        - git-delta
-        - lazygit
-      state: present
-    tags:
-      - homebrew
+        - zsh
+        - git
 
-  - name: Install Homebrew casks
-    community.general.homebrew_cask:
-      name: 
-        - visual-studio-code
-        - google-chrome
-        - postman
-        - alacritty
-        - rectangle
-        - font-hack-nerd-font
-        - spotify
-        - intellij-idea-ce
-      state: present
-      accept_external_apps: true
-    tags:
-      - homebrew
+    - name: Install oh-my-zsh
+      ansible.builtin.shell: >
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
+        git clone https://github.com/jeffreytse/zsh-vi-mode ~/.oh-my-zsh/plugins/zsh-vi-mode
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+      tags:
+        - zsh
 
-  - name: Install Java Versions
-    community.general.homebrew:
-      name: "{{ item.version }}"
-      state: present
-    with_items: "{{ java_versions }}"
-    tags: 
-      - java
+    - name: Tap casks
+      ansible.builtin.shell: >
+        brew tap homebrew/cask-fonts
+        brew tap d12frosted/emacs-plus
+      tags:
+        - homebrew
 
-  - name: Set Default Java Version
-    ansible.builtin.lineinfile:
-      path: "{{ ansible_env.HOME }}/.zshrc"
-      search_string: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
-      line:  'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
-    with_items: "{{ java_versions }}"
-    when: item.default is defined and item.default == true
-    tags:
-      - java
-      - zsh
+    - name: Link dotfiles
+      ansible.builtin.script:
+        chdir: "{{ personal_directory }}/dotfiles"
+        cmd: "install.sh"
+      tags:
+        - dotfiles
+        - tmux
+        - zsh
 
-  - name: Install Node Versions
-    ansible.builtin.shell: >
-      source /opt/homebrew/opt/nvm/nvm.sh && nvm install {{ item.version }}
-    with_items: "{{ node_versions }}"
-    tags:
-    - nodejs
+    - name: Get tmux plugin manager
+      ansible.builtin.git:
+        repo: https://github.com/tmux-plugins/tpm
+        dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+      tags:
+        - tmux
+        - git
 
-  - name: Set Default Node Version
-    ansible.builtin.shell: >
-      source /opt/homebrew/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
-    with_items: "{{ node_versions }}"
-    when: item.default is defined and item.default == true
-    tags:
-      - nodejs
+    - name: Get Neovim Config
+      ansible.builtin.git:
+        repo: "https://github.com/DeanGaffney/neovim-config.git"
+        dest: "{{ ansible_env.HOME }}/.config/nvim"
+      tags:
+        - neovim
+        - git
 
-  - name: Install Python Versions
-    ansible.builtin.shell: >
-      if ! ls {{ ansible_env.HOME }}/.pyenv/versions | grep {{ item.version }}; then
-        pyenv install {{ item.version }}
-      fi
-    with_items: "{{ python_versions }}"
-    tags:
-      - python
+    - name: Install Homebrew packages
+      community.general.homebrew:
+        name:
+          - ninja
+          - libtool
+          - cmake
+          - pkg-config
+          - gettext
+          - rust
+          - go
+          - pyenv
+          - jq
+          - cfn-lint
+          - yamlfmt
+          - awscli
+          - docker
+          - docker-compose
+          - zsh
+          - nvm
+          - gh
+          - tmux
+          - codespell
+          - shellcheck
+          - maven
+          - jenv
+          - google-java-format
+          - fzf
+          - ripgrep
+          - fd
+          - git-delta
+          - lazygit
+        state: present
+      tags:
+        - homebrew
 
-  - name: Set Default Python Version
-    ansible.builtin.shell: >
-      pyenv global {{ item.version }}
-    with_items: "{{ python_versions }}"
-    when: item.default is defined and item.default == true
-    tags:
-      - python
+    - name: Install Homebrew casks
+      community.general.homebrew_cask:
+        name:
+          - visual-studio-code
+          - google-chrome
+          - postman
+          - alacritty
+          - rectangle
+          - font-hack-nerd-font
+          - spotify
+          - intellij-idea-ce
+        state: present
+        accept_external_apps: true
+      tags:
+        - homebrew
 
-  - name: Install Neovim
-    ansible.builtin.script: 
-      chdir: "{{ ansible_env.HOME }}/.config/nvim"
-      cmd: "install.sh"
-    tags:
-      - neovim
+    - name: Install Java Versions
+      community.general.homebrew:
+        name: "{{ item.version }}"
+        state: present
+      with_items: "{{ java_versions }}"
+      tags:
+        - java
 
-  - name: Ensure notes directory exists
-    file:
-      path: "{{ ansible_env.HOME }}/notes"
-      state: directory
-    tags:
-    - notes
+    - name: Set Default Java Version
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        search_string: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
+        line: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
+      with_items: "{{ java_versions }}"
+      when: item.default is defined and item.default == true
+      tags:
+        - java
+        - zsh
+
+    - name: Install Node Versions
+      ansible.builtin.shell: >
+        source /opt/homebrew/opt/nvm/nvm.sh && nvm install {{ item.version }}
+      with_items: "{{ node_versions }}"
+      tags:
+        - nodejs
+
+    - name: Set Default Node Version
+      ansible.builtin.shell: >
+        source /opt/homebrew/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
+      with_items: "{{ node_versions }}"
+      when: item.default is defined and item.default == true
+      tags:
+        - nodejs
+
+    - name: Install Python Versions
+      ansible.builtin.shell: >
+        if ! ls {{ ansible_env.HOME }}/.pyenv/versions | grep {{ item.version }}; then
+          pyenv install {{ item.version }}
+        fi
+      with_items: "{{ python_versions }}"
+      tags:
+        - python
+
+    - name: Set Default Python Version
+      ansible.builtin.shell: >
+        pyenv global {{ item.version }}
+      with_items: "{{ python_versions }}"
+      when: item.default is defined and item.default == true
+      tags:
+        - python
+
+    - name: Install Neovim
+      ansible.builtin.script:
+        chdir: "{{ ansible_env.HOME }}/.config/nvim"
+        cmd: "install.sh"
+      tags:
+        - neovim
+
+    - name: Ensure notes directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/notes"
+        state: directory
+      tags:
+        - notes
