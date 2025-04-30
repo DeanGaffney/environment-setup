@@ -116,6 +116,7 @@
           - pyenv
           - jq
           - cfn-lint
+          - eslint_d
           - yamlfmt
           - awscli
           - docker
