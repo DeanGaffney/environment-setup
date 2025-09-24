@@ -122,6 +122,8 @@
           - fd
           - git-delta
           - lazygit
+          - yt-dlp
+          - ffmpeg
         state: present
       tags:
         - homebrew
