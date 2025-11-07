@@ -19,6 +19,8 @@
       - version: openjdk@11
       - version: openjdk@17
         default: true
+      - version: openjdk@21
+      - version: openjdk@25
   tasks:
     - name: Install Prerequisites
       community.general.homebrew:
@@ -84,7 +86,7 @@
         - zsh
     - name: Tap casks
       ansible.builtin.shell: >
-        brew tap homebrew/cask-fonts brew tap d12frosted/emacs-plus
+        brew tap homebrew/cask-fonts
 
       tags:
         - homebrew
@@ -166,6 +168,7 @@
           - font-ubuntu-mono-nerd-font
           - spotify
           - intellij-idea-ce
+          - kiro
         state: present
         accept_external_apps: true
       tags:
@@ -251,3 +254,67 @@
         state: directory
       tags:
         - notes
+    - name: Prompt for GitHub token
+      pause:
+        prompt: "Enter your GitHub Personal Access Token (from encrypted Notes)"
+        echo: no
+      register: github_token
+      tags:
+        - git
+        - ssh
+    - name: Authenticate gh CLI
+      ansible.builtin.shell: |
+        echo "{{ github_token.user_input }}" | gh auth login --with-token
+      tags:
+        - git
+        - ssh
+    - name: Check if SSH key exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh/id_ed25519"
+      register: ssh_key
+      tags:
+        - ssh
+        - git
+    - name: Ensure .ssh directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/.ssh"
+        state: directory
+        mode: '0700'
+      tags:
+        - ssh
+        - git
+    - name: Generate SSH key for GitHub
+      ansible.builtin.shell: |
+        ssh-keygen -t ed25519 -C "github-key" -f {{ ansible_env.HOME }}/.ssh/id_ed25519 -N ""
+      when: not ssh_key.stat.exists
+      tags:
+        - ssh
+        - git
+    - name: Configure SSH to use keychain
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_env.HOME }}/.ssh/config"
+        create: yes
+        mode: '0600'
+        block: |
+          Host github.com
+            AddKeysToAgent yes
+            UseKeychain yes
+            IdentityFile ~/.ssh/id_ed25519
+      tags:
+        - ssh
+        - git
+    - name: Add SSH key to GitHub via gh CLI
+      ansible.builtin.shell: |
+        gh ssh-key add {{ ansible_env.HOME }}/.ssh/id_ed25519.pub --title "{{ ansible_hostname }}"
+      when: not ssh_key.stat.exists
+      tags:
+        - ssh
+        - git
+    - name: Add SSH key to agent
+      ansible.builtin.shell: |
+        eval "$(ssh-agent -s)"
+        ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/id_ed25519
+      when: not ssh_key.stat.exists
+      tags:
+        - ssh
+        - git
