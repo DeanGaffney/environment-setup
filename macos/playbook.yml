@@ -1,10 +1,11 @@
 - name: Install software
-  hosts: localhost
+  hosts: local
   become: false
   vars:
     workspace_directory: "{{ ansible_env.HOME }}/workspace"
     personal_directory: "{{ ansible_env.HOME }}/workspace/personal"
     work_directory: "{{ ansible_env.HOME }}/workspace/work"
+    homebrew_prefix: "{{ '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local' }}"
     node_versions:
       - version: 16.16.0
       - version: 18.14.2
@@ -57,9 +58,28 @@
         - zsh
         - git
     - name: Install oh-my-zsh
-      ansible.builtin.shell: >
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions git clone https://github.com/jeffreytse/zsh-vi-mode ~/.oh-my-zsh/plugins/zsh-vi-mode git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
-
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      tags:
+        - zsh
+    - name: Install zsh-autosuggestions plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions
+        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+      tags:
+        - zsh
+    - name: Install zsh-vi-mode plugin
+      ansible.builtin.git:
+        repo: https://github.com/jeffreytse/zsh-vi-mode
+        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-vi-mode"
+      tags:
+        - zsh
+    - name: Install zsh-syntax-highlighting plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
       tags:
         - zsh
     - name: Tap casks
@@ -68,10 +88,17 @@
 
       tags:
         - homebrew
+    - name: Check if dotfiles install script exists
+      ansible.builtin.stat:
+        path: "{{ personal_directory }}/dotfiles/install.sh"
+      register: dotfiles_script
+      tags:
+        - dotfiles
     - name: Link dotfiles
-      ansible.builtin.script:
+      ansible.builtin.shell: ./install.sh
+      args:
         chdir: "{{ personal_directory }}/dotfiles"
-        cmd: "install.sh"
+      when: dotfiles_script.stat.exists
       tags:
         - dotfiles
         - tmux
@@ -150,26 +177,39 @@
       with_items: "{{ java_versions }}"
       tags:
         - java
-    - name: Set Default Java Version
-      ansible.builtin.lineinfile:
-        path: "{{ ansible_env.HOME }}/.zshrc"
-        search_string: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
-        line: 'export PATH="/opt/homebrew/opt/{{ item.version }}/bin:$PATH"'
+    - name: Add Java versions to jenv
+      ansible.builtin.shell: |
+        eval "$(jenv init -)"
+        jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
+      with_items: "{{ java_versions }}"
+      tags:
+        - java
+    - name: Enable jenv export plugin
+      ansible.builtin.shell: |
+        eval "$(jenv init -)"
+        jenv enable-plugin export
+      tags:
+        - java
+    - name: Set default Java version with jenv
+      ansible.builtin.shell: |
+        eval "$(jenv init -)"
+        jenv global {{ item.version | regex_replace('openjdk@', '') }}
       with_items: "{{ java_versions }}"
       when: item.default is defined and item.default == true
       tags:
         - java
-        - zsh
     - name: Install Node Versions
       ansible.builtin.shell: >
-        source /opt/homebrew/opt/nvm/nvm.sh && nvm install {{ item.version }}
+        source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm install {{ item.version }}
 
       with_items: "{{ node_versions }}"
+      args:
+        creates: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ item.version }}"
       tags:
         - nodejs
     - name: Set Default Node Version
       ansible.builtin.shell: >
-        source /opt/homebrew/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
+        source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
 
       with_items: "{{ node_versions }}"
       when: item.default is defined and item.default == true
@@ -177,14 +217,11 @@
         - nodejs
     - name: Install Python Versions
       ansible.builtin.shell: >
-        if ! ls {{ ansible_env.HOME }}/.pyenv/versions | grep {{ item.version }}; then
-
-
-
-          pyenv install {{ item.version }}
-        fi
+        pyenv install {{ item.version }}
 
       with_items: "{{ python_versions }}"
+      args:
+        creates: "{{ ansible_env.HOME }}/.pyenv/versions/{{ item.version }}"
       tags:
         - python
     - name: Set Default Python Version
@@ -195,10 +232,17 @@
       when: item.default is defined and item.default == true
       tags:
         - python
+    - name: Check if neovim install script exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.config/nvim/install.sh"
+      register: neovim_script
+      tags:
+        - neovim
     - name: Install Neovim
-      ansible.builtin.script:
+      ansible.builtin.shell: ./install.sh
+      args:
         chdir: "{{ ansible_env.HOME }}/.config/nvim"
-        cmd: "install.sh"
+      when: neovim_script.stat.exists
       tags:
         - neovim
     - name: Ensure notes directory exists
