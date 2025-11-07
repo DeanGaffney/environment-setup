@@ -254,6 +254,28 @@
         state: directory
       tags:
         - notes
+    - name: Prompt for Git user name
+      pause:
+        prompt: "Enter your Git user name. e.g Joe Blogs"
+      register: git_user_name
+      tags:
+        - git
+    - name: Prompt for Git user email
+      pause:
+        prompt: "Enter your Git user email"
+      register: git_user_email
+      tags:
+        - git
+    - name: Configure Git user name
+      ansible.builtin.shell: |
+        git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.name "{{ git_user_name.user_input }}"
+      tags:
+        - git
+    - name: Configure Git user email
+      ansible.builtin.shell: |
+        git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.email "{{ git_user_email.user_input }}"
+      tags:
+        - git
     - name: Prompt for GitHub token
       pause:
         prompt: "Enter your GitHub Personal Access Token (from encrypted Notes)"
