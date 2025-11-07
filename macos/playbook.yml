@@ -185,12 +185,16 @@
         eval "$(jenv init -)"
         jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
       with_items: "{{ java_versions }}"
+      args:
+        creates: "{{ ansible_env.HOME }}/.jenv/versions/{{ item.version | regex_replace('openjdk@', '') }}"
       tags:
         - java
     - name: Enable jenv export plugin
       ansible.builtin.shell: |
         eval "$(jenv init -)"
         jenv enable-plugin export
+      args:
+        creates: "{{ ansible_env.HOME }}/.jenv/plugins/export"
       tags:
         - java
     - name: Set default Java version with jenv
@@ -230,9 +234,10 @@
     - name: Set Default Python Version
       ansible.builtin.shell: >
         pyenv global {{ item.version }}
-
       with_items: "{{ python_versions }}"
       when: item.default is defined and item.default == true
+      args:
+        creates: "{{ ansible_env.HOME }}/.pyenv/version"
       tags:
         - python
     - name: Check if neovim install script exists
