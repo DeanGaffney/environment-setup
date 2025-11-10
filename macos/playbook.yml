@@ -134,7 +134,6 @@
         - awscli
         - docker
         - docker-compose
-        - docker-desktop
         - zsh
         - nvm
         - gh
