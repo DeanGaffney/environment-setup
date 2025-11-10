@@ -85,12 +85,6 @@
         dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
       tags:
         - zsh
-    - name: Tap casks
-      ansible.builtin.shell: >
-        brew tap homebrew/cask-fonts
-
-      tags:
-        - homebrew
     - name: Check if dotfiles install script exists
       ansible.builtin.stat:
         path: "{{ personal_directory }}/dotfiles/install.sh"
