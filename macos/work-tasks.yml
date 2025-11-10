@@ -1,0 +1,92 @@
+---
+# Work-specific tasks
+- name: Ensure work config directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/work"
+    state: directory
+    mode: '0755'
+  tags:
+    - work
+
+- name: Create genesys.sh work config script
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/work/genesys.sh"
+    mode: '0755'
+    content: |
+      #!/usr/bin/env bash
+      export ENVIRONMENT=dev
+      export PC_PLATFORM_PROPERTY_FILE=~/.inin-properties
+  tags:
+    - work
+
+- name: Create empty .inin-properties file
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.inin-properties"
+    state: touch
+    mode: '0600'
+  tags:
+    - work
+
+- name: Check if Bitbucket SSH key exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key"
+  register: bitbucket_key
+  tags:
+    - ssh
+    - work
+
+- name: Generate SSH key for Bitbucket
+  ansible.builtin.shell: |
+    ssh-keygen -t ed25519 -C "bitbucket-key" -f {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key -N ""
+  when: not bitbucket_key.stat.exists
+  tags:
+    - ssh
+    - work
+
+- name: Add Bitbucket host to SSH config
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.ssh/config"
+    create: yes
+    mode: '0600'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Bitbucket"
+    block: |
+      Host bitbucket.org
+        AddKeysToAgent yes
+        UseKeychain yes
+        IdentityFile ~/.ssh/genesys-bitbucket-key
+  tags:
+    - ssh
+    - work
+
+- name: Add Bitbucket SSH key to agent
+  ansible.builtin.shell: |
+    eval "$(ssh-agent -s)"
+    ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key
+  when: not bitbucket_key.stat.exists
+  tags:
+    - ssh
+    - work
+
+- name: Display Bitbucket public key
+  ansible.builtin.shell: cat {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key.pub
+  register: bitbucket_pubkey
+  when: not bitbucket_key.stat.exists
+  tags:
+    - ssh
+    - work
+
+- name: Show Bitbucket key instructions
+  ansible.builtin.debug:
+    msg: |
+      ========================================
+      Bitbucket SSH Key Generated!
+      ========================================
+      Please add this key to your Bitbucket account:
+      {{ bitbucket_pubkey.stdout }}
+      
+      Go to: https://bitbucket.org/account/settings/ssh-keys/
+      ========================================
+  when: not bitbucket_key.stat.exists
+  tags:
+    - ssh
+    - work
