@@ -14,8 +14,8 @@ else
   echo "Command Line Tools already installed"
 fi
 
-# Check if Homebrew is installed
-if ! command -v brew &> /dev/null; then
+# Check if Homebrew is installed by checking if the directory exists
+if [[ ! -d "/opt/homebrew" ]] && [[ ! -d "/usr/local/Homebrew" ]]; then
   echo "Installing Homebrew..."
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   
