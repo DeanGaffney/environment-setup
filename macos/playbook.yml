@@ -22,7 +22,6 @@
         default: true
       - version: openjdk@21
       - version: openjdk@25
-    neovim_version: "neovim@0.11"  # Pinned to 0.11.x
   
   tasks:
     # Prerequisites (must run first)

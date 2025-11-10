@@ -22,7 +22,7 @@
     - nvm
     - gh
     - tmux
-    - "{{ neovim_version }}"
+    - neovim
     - codespell
     - shellcheck
     - maven
