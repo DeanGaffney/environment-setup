@@ -283,6 +283,14 @@
         state: directory
       tags:
         - notes
+    - name: Prompt for machine type
+      pause:
+        prompt: "Enter machine type (work/personal)"
+      register: machine_type
+      tags:
+        - git
+        - ssh
+        - work
     - name: Ensure work config directory exists
       file:
         path: "{{ ansible_env.HOME }}/.config/work"
@@ -315,18 +323,14 @@
         path: "{{ ansible_env.HOME }}/.m2"
         state: directory
         mode: '0755'
-      when: machine_type.user_input == "work"
       tags:
-        - work
         - maven
     - name: Create empty Maven settings.xml
       ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/.m2/settings.xml"
         state: touch
         mode: '0600'
-      when: machine_type.user_input == "work"
       tags:
-        - work
         - maven
         - java
     - name: Ensure .pip directory exists
@@ -334,27 +338,21 @@
         path: "{{ ansible_env.HOME }}/.pip"
         state: directory
         mode: '0755'
-      when: machine_type.user_input == "work"
       tags:
-        - work
         - python
     - name: Create empty pip.conf
       ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/.pip/pip.conf"
         state: touch
         mode: '0600'
-      when: machine_type.user_input == "work"
       tags:
-        - work
         - python
     - name: Create empty .npmrc
       ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/.npmrc"
         state: touch
         mode: '0600'
-      when: machine_type.user_input == "work"
       tags:
-        - work
         - nodejs
     - name: Check if git config already exists
       ansible.builtin.stat:
@@ -362,14 +360,6 @@
       register: git_config_exists
       tags:
         - git
-    - name: Prompt for machine type
-      pause:
-        prompt: "Enter machine type (work/personal)"
-      register: machine_type
-      tags:
-        - git
-        - ssh
-        - work
     - name: Copy base gitconfig template
       ansible.builtin.copy:
         src: "{{ personal_directory }}/dotfiles/gitconfig"
