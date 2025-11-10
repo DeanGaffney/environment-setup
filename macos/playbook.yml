@@ -366,10 +366,10 @@
       pause:
         prompt: "Enter machine type (work/personal)"
       register: machine_type
-      when: not git_config_exists.stat.exists
       tags:
         - git
         - ssh
+        - work
     - name: Copy base gitconfig template
       ansible.builtin.copy:
         src: "{{ personal_directory }}/dotfiles/gitconfig"
