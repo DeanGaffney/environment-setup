@@ -29,12 +29,16 @@ The setup script will automatically install:
 On a fresh Mac, run this one-liner:
 
 ```bash
-git clone https://github.com/DeanGaffney/environment-setup.git && cd environment-setup/macos && bash ./setup.sh
+mkdir -p ~/workspace/personal && cd ~/workspace/personal && git clone https://github.com/DeanGaffney/environment-setup.git && cd environment-setup/macos && bash ./setup.sh
 ```
 
 Or step by step:
 
 ```bash
+# Create workspace directory structure
+mkdir -p ~/workspace/personal
+cd ~/workspace/personal
+
 # Clone this repo (macOS will prompt to install Command Line Tools if needed)
 git clone https://github.com/DeanGaffney/environment-setup.git
 cd environment-setup/macos
