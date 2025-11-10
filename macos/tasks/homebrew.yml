@@ -1,0 +1,68 @@
+---
+# Homebrew packages and casks
+- name: Install Homebrew packages
+  community.general.homebrew:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - ninja
+    - libtool
+    - cmake
+    - pkg-config
+    - gettext
+    - rust
+    - go
+    - pyenv
+    - jq
+    - cfn-lint
+    - eslint_d
+    - yamlfmt
+    - awscli
+    - zsh
+    - nvm
+    - gh
+    - tmux
+    - "{{ neovim_version }}"
+    - codespell
+    - shellcheck
+    - maven
+    - jenv
+    - google-java-format
+    - fzf
+    - ripgrep
+    - fd
+    - git-delta
+    - lazygit
+    - yt-dlp
+    - ffmpeg
+    - hadolint
+    - shfmt
+    - stylua
+    - luarocks
+    - lua-language-server
+    - gopls
+    - golangci-lint
+    - yaml-language-server
+    - black
+    - flake8
+  tags:
+    - homebrew
+
+- name: Install Homebrew casks
+  community.general.homebrew_cask:
+    name: "{{ item }}"
+    state: present
+    accept_external_apps: true
+  loop:
+    - visual-studio-code
+    - google-chrome
+    - postman
+    - wezterm
+    - rectangle
+    - font-hack-nerd-font
+    - font-ubuntu-mono-nerd-font
+    - spotify
+    - intellij-idea-ce
+    - kiro
+  tags:
+    - homebrew

@@ -1,0 +1,29 @@
+---
+# Dotfiles setup
+- name: Get dotfiles
+  ansible.builtin.git:
+    repo: "https://github.com/DeanGaffney/dotfiles.git"
+    dest: "{{ personal_directory }}/dotfiles"
+    update: no
+  tags:
+    - dotfiles
+    - tmux
+    - zsh
+    - git
+
+- name: Check if dotfiles install script exists
+  ansible.builtin.stat:
+    path: "{{ personal_directory }}/dotfiles/install.sh"
+  register: dotfiles_script
+  tags:
+    - dotfiles
+
+- name: Link dotfiles
+  ansible.builtin.shell: ./install.sh
+  args:
+    chdir: "{{ personal_directory }}/dotfiles"
+  when: dotfiles_script.stat.exists
+  tags:
+    - dotfiles
+    - tmux
+    - zsh

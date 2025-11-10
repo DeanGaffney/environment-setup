@@ -48,9 +48,47 @@ bash ./setup.sh
 ```
 
 The script will guide you through the rest of the setup, prompting for:
+
 - Machine type (work/personal)
 - Git user information
 - GitHub token
+
+### Running Specific Tasks
+
+You can run specific parts of the setup using tags:
+
+```bash
+cd environment-setup/macos
+
+# Only install Homebrew packages
+ansible-playbook -i inventory playbook.yml --tags homebrew
+
+# Only setup programming languages (Java, Node, Python)
+ansible-playbook -i inventory playbook.yml --tags languages
+
+# Only setup git and SSH
+ansible-playbook -i inventory playbook.yml --tags git,ssh
+
+# Only setup work-specific configuration
+ansible-playbook -i inventory playbook.yml --tags work
+
+# Skip certain tasks
+ansible-playbook -i inventory playbook.yml --skip-tags homebrew
+```
+
+Available tags:
+
+- `prerequisites` - Basic tools (git, curl, etc.)
+- `workspace` - Workspace directories
+- `dotfiles` - Dotfiles setup
+- `shell`, `zsh` - Shell configuration
+- `homebrew` - Homebrew packages and casks
+- `languages` - Java, Node, Python setup
+- `java`, `nodejs`, `python` - Individual languages
+- `dev-tools` - tmux, neovim
+- `config` - Config files (maven, pip, npm)
+- `git`, `ssh` - Git and SSH setup
+- `work` - Work-specific tasks
 
 ### What Gets Installed
 

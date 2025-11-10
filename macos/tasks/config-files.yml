@@ -1,0 +1,42 @@
+---
+# Configuration files for various tools
+- name: Ensure .m2 directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.m2"
+    state: directory
+    mode: '0755'
+  tags:
+    - maven
+
+- name: Create empty Maven settings.xml
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.m2/settings.xml"
+    state: touch
+    mode: '0600'
+  tags:
+    - maven
+    - java
+
+- name: Ensure .pip directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.pip"
+    state: directory
+    mode: '0755'
+  tags:
+    - python
+
+- name: Create empty pip.conf
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.pip/pip.conf"
+    state: touch
+    mode: '0600'
+  tags:
+    - python
+
+- name: Create empty .npmrc
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.npmrc"
+    state: touch
+    mode: '0600'
+  tags:
+    - nodejs

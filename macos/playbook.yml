@@ -1,3 +1,4 @@
+---
 - name: Install software
   hosts: local
   become: false
@@ -21,7 +22,10 @@
         default: true
       - version: openjdk@21
       - version: openjdk@25
+    neovim_version: "neovim@0.11"  # Pinned to 0.11.x
+  
   tasks:
+    # Prerequisites (must run first)
     - name: Install Prerequisites
       community.general.homebrew:
         name:
@@ -32,257 +36,52 @@
         state: present
       tags:
         - homebrew
-    - name: Ensure workspace directory exists
-      file:
-        path: "{{ workspace_directory }}"
-        state: directory
+        - prerequisites
+
+    # Workspace directories
+    - name: Setup workspace directories
+      include_tasks: tasks/workspace.yml
       tags:
         - workspace
-    - name: Ensure workspace personal directory exists
-      file:
-        path: "{{ personal_directory }}"
-        state: directory
-      tags:
-        - workspace
-    - name: Ensure workspace work directory exists
-      file:
-        path: "{{ work_directory }}"
-        state: directory
-      tags:
-        - workspace
-    - name: Get dotfiles
-      ansible.builtin.git:
-        repo: "https://github.com/DeanGaffney/dotfiles.git"
-        dest: "{{ personal_directory }}/dotfiles"
-        update: no
+
+    # Dotfiles
+    - name: Setup dotfiles
+      include_tasks: tasks/dotfiles.yml
       tags:
         - dotfiles
-        - tmux
+
+    # Shell (zsh, oh-my-zsh, plugins)
+    - name: Setup shell
+      include_tasks: tasks/shell.yml
+      tags:
+        - shell
         - zsh
-        - git
-    - name: Install oh-my-zsh
-      ansible.builtin.shell: |
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-      args:
-        creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
-      tags:
-        - zsh
-    - name: Install zsh-autosuggestions plugin
-      ansible.builtin.git:
-        repo: https://github.com/zsh-users/zsh-autosuggestions
-        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
-      tags:
-        - zsh
-    - name: Install zsh-vi-mode plugin
-      ansible.builtin.git:
-        repo: https://github.com/jeffreytse/zsh-vi-mode
-        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-vi-mode"
-      tags:
-        - zsh
-    - name: Install zsh-syntax-highlighting plugin
-      ansible.builtin.git:
-        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
-        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-syntax-highlighting"
-      tags:
-        - zsh
-    - name: Check if dotfiles install script exists
-      ansible.builtin.stat:
-        path: "{{ personal_directory }}/dotfiles/install.sh"
-      register: dotfiles_script
-      tags:
-        - dotfiles
-    - name: Link dotfiles
-      ansible.builtin.shell: ./install.sh
-      args:
-        chdir: "{{ personal_directory }}/dotfiles"
-      when: dotfiles_script.stat.exists
-      tags:
-        - dotfiles
-        - tmux
-        - zsh
-    - name: Get tmux plugin manager
-      ansible.builtin.git:
-        repo: https://github.com/tmux-plugins/tpm
-        dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
-      tags:
-        - tmux
-        - git
-    - name: Get Neovim Config
-      ansible.builtin.git:
-        repo: "https://github.com/DeanGaffney/neovim-config.git"
-        dest: "{{ ansible_env.HOME }}/.config/nvim"
-      tags:
-        - neovim
-        - git
+
+    # Homebrew packages and casks
     - name: Install Homebrew packages
-      community.general.homebrew:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - ninja
-        - libtool
-        - cmake
-        - pkg-config
-        - gettext
-        - rust
-        - go
-        - pyenv
-        - jq
-        - cfn-lint
-        - eslint_d
-        - yamlfmt
-        - awscli
-        - docker
-        - docker-compose
-        - zsh
-        - nvm
-        - gh
-        - tmux
-        - neovim
-        - codespell
-        - shellcheck
-        - maven
-        - jenv
-        - google-java-format
-        - fzf
-        - ripgrep
-        - fd
-        - git-delta
-        - lazygit
-        - yt-dlp
-        - ffmpeg
-        - hadolint
-        - shfmt
-        - stylua
-        - luarocks
-        - lua-language-server
-        - gopls
-        - golangci-lint
-        - yaml-language-server
-        - black
-        - flake8
+      include_tasks: tasks/homebrew.yml
       tags:
         - homebrew
-    - name: Install Homebrew casks
-      community.general.homebrew_cask:
-        name: "{{ item }}"
-        state: present
-        accept_external_apps: true
-      loop:
-        - visual-studio-code
-        - google-chrome
-        - postman
-        - wezterm
-        - rectangle
-        - font-hack-nerd-font
-        - font-ubuntu-mono-nerd-font
-        - spotify
-        - intellij-idea-ce
-        - kiro
-      tags:
-        - homebrew
-    - name: Install Java Versions
-      community.general.homebrew:
-        name: "{{ item.version }}"
-        state: present
-      with_items: "{{ java_versions }}"
-      tags:
-        - java
-    - name: Add Java versions to jenv
-      ansible.builtin.shell: |
-        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
-        {{ homebrew_prefix }}/bin/jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
-      with_items: "{{ java_versions }}"
-      args:
-        creates: "{{ ansible_env.HOME }}/.jenv/versions/{{ item.version | regex_replace('openjdk@', '') }}"
-      tags:
-        - java
-    - name: Enable jenv export plugin
-      ansible.builtin.shell: |
-        eval "$({{ homebrew_prefix }}/bin/jenv sh-enable-plugin export)" || true
-      tags:
-        - java
-    - name: Check current Java global version
-      ansible.builtin.shell: |
-        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
-        {{ homebrew_prefix }}/bin/jenv global
-      register: current_java_version
-      changed_when: false
-      ignore_errors: true
-      tags:
-        - java
-    - name: Set default Java version with jenv
-      ansible.builtin.shell: |
-        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
-        {{ homebrew_prefix }}/bin/jenv global {{ item.version | regex_replace('openjdk@', '') }}
-      with_items: "{{ java_versions }}"
-      when:
-        - item.default is defined and item.default == true
-        - current_java_version.stdout != (item.version | regex_replace('openjdk@', ''))
-      tags:
-        - java
-    - name: Install Node Versions
-      ansible.builtin.shell: >
-        source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm install {{ item.version }}
 
-      with_items: "{{ node_versions }}"
-      args:
-        creates: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ item.version }}"
+    # Programming languages (Java, Node, Python)
+    - name: Setup programming languages
+      include_tasks: tasks/languages.yml
       tags:
-        - nodejs
-    - name: Check current Node default version
-      ansible.builtin.shell: >
-        source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm version default
-      register: current_node_version
-      changed_when: false
-      ignore_errors: true
-      tags:
-        - nodejs
-    - name: Set Default Node Version
-      ansible.builtin.shell: >
-        source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
-      with_items: "{{ node_versions }}"
-      when:
-        - item.default is defined and item.default == true
-        - current_node_version.stdout != "v" + item.version
-      tags:
-        - nodejs
-    - name: Install Python Versions
-      ansible.builtin.shell: >
-        pyenv install {{ item.version }}
+        - languages
 
-      with_items: "{{ python_versions }}"
-      args:
-        creates: "{{ ansible_env.HOME }}/.pyenv/versions/{{ item.version }}"
+    # Development tools (tmux, neovim)
+    - name: Setup development tools
+      include_tasks: tasks/dev-tools.yml
       tags:
-        - python
-    - name: Check current Python global version
-      ansible.builtin.shell: pyenv global
-      register: current_python_version
-      changed_when: false
-      ignore_errors: true
-      tags:
-        - python
-    - name: Set Default Python Version
-      ansible.builtin.shell: >
-        pyenv global {{ item.version }}
-      with_items: "{{ python_versions }}"
-      when: 
-        - item.default is defined and item.default == true
-        - current_python_version.stdout != item.version
-      tags:
-        - python
+        - dev-tools
 
-    - name: Pin Neovim version
-      ansible.builtin.shell: brew pin neovim
+    # Configuration files (maven, pip, npm)
+    - name: Setup configuration files
+      include_tasks: tasks/config-files.yml
       tags:
-        - neovim
-    - name: Ensure notes directory exists
-      file:
-        path: "{{ ansible_env.HOME }}/notes"
-        state: directory
-      tags:
-        - notes
+        - config
+
+    # Prompt for machine type (needed for git and work tasks)
     - name: Prompt for machine type
       pause:
         prompt: "Enter machine type (work/personal)"
@@ -291,251 +90,17 @@
         - git
         - ssh
         - work
-    - name: Include work-specific tasks
-      include_tasks: work-tasks.yml
-      when: machine_type.user_input == "work"
-      tags:
-        - work
-    - name: Ensure .m2 directory exists
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.m2"
-        state: directory
-        mode: '0755'
-      tags:
-        - maven
-    - name: Create empty Maven settings.xml
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.m2/settings.xml"
-        state: touch
-        mode: '0600'
-      tags:
-        - maven
-        - java
-    - name: Ensure .pip directory exists
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.pip"
-        state: directory
-        mode: '0755'
-      tags:
-        - python
-    - name: Create empty pip.conf
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.pip/pip.conf"
-        state: touch
-        mode: '0600'
-      tags:
-        - python
-    - name: Create empty .npmrc
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.npmrc"
-        state: touch
-        mode: '0600'
-      tags:
-        - nodejs
 
-    - name: Check if git config already exists
-      ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/.gitconfig.personal"
-      register: git_config_exists
-      tags:
-        - git
-    - name: Copy base gitconfig template
-      ansible.builtin.copy:
-        src: "{{ personal_directory }}/dotfiles/gitconfig"
-        dest: "{{ ansible_env.HOME }}/.gitconfig"
-        force: yes
-      tags:
-        - git
-    - name: Prompt for Git user name
-      pause:
-        prompt: "Enter your Git user name. e.g Joe Blogs"
-      register: git_user_name
-      when: not git_config_exists.stat.exists
-      tags:
-        - git
-    - name: Prompt for personal Git email
-      pause:
-        prompt: "Enter your personal Git email"
-      register: git_personal_email
-      when: not git_config_exists.stat.exists
-      tags:
-        - git
-    - name: Prompt for work Git email
-      pause:
-        prompt: "Enter your work Git email"
-      register: git_work_email
-      when: 
-        - not git_config_exists.stat.exists
-        - machine_type.user_input == "work"
-      tags:
-        - git
-    - name: Configure personal Git user name
-      ansible.builtin.shell: |
-        git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.name "{{ git_user_name.user_input }}"
-      when: not git_config_exists.stat.exists
-      tags:
-        - git
-    - name: Configure personal Git user email
-      ansible.builtin.shell: |
-        git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.email "{{ git_personal_email.user_input }}"
-      when: not git_config_exists.stat.exists
-      tags:
-        - git
-    - name: Configure work Git user name
-      ansible.builtin.shell: |
-        git config --file {{ ansible_env.HOME }}/.gitconfig.work user.name "{{ git_user_name.user_input }}"
-      when: 
-        - not git_config_exists.stat.exists
-        - machine_type.user_input == "work"
-      tags:
-        - git
-    - name: Configure work Git user email
-      ansible.builtin.shell: |
-        git config --file {{ ansible_env.HOME }}/.gitconfig.work user.email "{{ git_work_email.user_input }}"
-      when: 
-        - not git_config_exists.stat.exists
-        - machine_type.user_input == "work"
-      tags:
-        - git
-    - name: Check if gh is already authenticated
-      ansible.builtin.shell: gh auth status
-      register: gh_auth_status
-      failed_when: false
-      changed_when: false
+    # Git configuration and SSH
+    - name: Setup Git and SSH
+      include_tasks: tasks/git.yml
       tags:
         - git
         - ssh
-    - name: Prompt for GitHub token
-      pause:
-        prompt: "Enter your GitHub Personal Access Token (from encrypted Notes)"
-        echo: no
-      register: github_token
-      when: gh_auth_status.rc != 0
-      tags:
-        - git
-        - ssh
-    - name: Authenticate gh CLI
-      ansible.builtin.shell: |
-        echo "{{ github_token.user_input }}" | gh auth login --with-token
-      when: gh_auth_status.rc != 0
-      tags:
-        - git
-        - ssh
-    - name: Check if SSH key exists
-      ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/.ssh/id_ed25519"
-      register: ssh_key
-      tags:
-        - ssh
-        - git
-    - name: Ensure .ssh directory exists
-      file:
-        path: "{{ ansible_env.HOME }}/.ssh"
-        state: directory
-        mode: '0700'
-      tags:
-        - ssh
-        - git
-    - name: Generate SSH key for GitHub
-      ansible.builtin.shell: |
-        ssh-keygen -t ed25519 -C "github-key" -f {{ ansible_env.HOME }}/.ssh/id_ed25519 -N ""
-      when: not ssh_key.stat.exists
-      tags:
-        - ssh
-        - git
-    - name: Configure SSH to use keychain
-      ansible.builtin.blockinfile:
-        path: "{{ ansible_env.HOME }}/.ssh/config"
-        create: yes
-        mode: '0600'
-        block: |
-          Host github.com
-            AddKeysToAgent yes
-            UseKeychain yes
-            IdentityFile ~/.ssh/id_ed25519
-      tags:
-        - ssh
-        - git
-    - name: Add SSH key to GitHub via gh CLI
-      ansible.builtin.shell: |
-        gh ssh-key add {{ ansible_env.HOME }}/.ssh/id_ed25519.pub --title "{{ ansible_hostname }}-{{ machine_type.user_input }}"
-      when: not ssh_key.stat.exists
-      tags:
-        - ssh
-        - git
-    - name: Add SSH key to agent
-      ansible.builtin.shell: |
-        eval "$(ssh-agent -s)"
-        ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/id_ed25519
-      when: not ssh_key.stat.exists
-      tags:
-        - ssh
-        - git
-    - name: Check if Bitbucket SSH key exists
-      ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key"
-      register: bitbucket_key
+
+    # Work-specific tasks
+    - name: Setup work-specific configuration
+      include_tasks: tasks/work.yml
       when: machine_type.user_input == "work"
       tags:
-        - ssh
-        - work
-    - name: Generate SSH key for Bitbucket
-      ansible.builtin.shell: |
-        ssh-keygen -t ed25519 -C "bitbucket-key" -f {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key -N ""
-      when: 
-        - machine_type.user_input == "work"
-        - not bitbucket_key.stat.exists
-      tags:
-        - ssh
-        - work
-    - name: Add Bitbucket host to SSH config
-      ansible.builtin.blockinfile:
-        path: "{{ ansible_env.HOME }}/.ssh/config"
-        create: yes
-        mode: '0600'
-        marker: "# {mark} ANSIBLE MANAGED BLOCK - Bitbucket"
-        block: |
-          Host bitbucket.org
-            AddKeysToAgent yes
-            UseKeychain yes
-            IdentityFile ~/.ssh/genesys-bitbucket-key
-      when: machine_type.user_input == "work"
-      tags:
-        - ssh
-        - work
-    - name: Add Bitbucket SSH key to agent
-      ansible.builtin.shell: |
-        eval "$(ssh-agent -s)"
-        ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key
-      when: 
-        - machine_type.user_input == "work"
-        - not bitbucket_key.stat.exists
-      tags:
-        - ssh
-        - work
-    - name: Display Bitbucket public key
-      ansible.builtin.shell: cat {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key.pub
-      register: bitbucket_pubkey
-      when: 
-        - machine_type.user_input == "work"
-        - not bitbucket_key.stat.exists
-      tags:
-        - ssh
-        - work
-    - name: Show Bitbucket key instructions
-      ansible.builtin.debug:
-        msg: |
-          ========================================
-          Bitbucket SSH Key Generated!
-          ========================================
-          Please add this key to your Bitbucket account:
-          {{ bitbucket_pubkey.stdout }}
-          
-          Go to: https://bitbucket.org/account/settings/ssh-keys/
-          ========================================
-      when: 
-        - machine_type.user_input == "work"
-        - not bitbucket_key.stat.exists
-      tags:
-        - ssh
         - work

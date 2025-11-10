@@ -1,0 +1,105 @@
+---
+# Programming language version managers (Java, Node, Python)
+
+# Java / jenv
+- name: Install Java Versions
+  community.general.homebrew:
+    name: "{{ item.version }}"
+    state: present
+  with_items: "{{ java_versions }}"
+  tags:
+    - java
+
+- name: Add Java versions to jenv
+  ansible.builtin.shell: |
+    eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+    {{ homebrew_prefix }}/bin/jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
+  with_items: "{{ java_versions }}"
+  args:
+    creates: "{{ ansible_env.HOME }}/.jenv/versions/{{ item.version | regex_replace('openjdk@', '') }}"
+  tags:
+    - java
+
+- name: Enable jenv export plugin
+  ansible.builtin.shell: |
+    eval "$({{ homebrew_prefix }}/bin/jenv sh-enable-plugin export)" || true
+  tags:
+    - java
+
+- name: Check current Java global version
+  ansible.builtin.shell: |
+    eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+    {{ homebrew_prefix }}/bin/jenv global
+  register: current_java_version
+  changed_when: false
+  ignore_errors: true
+  tags:
+    - java
+
+- name: Set default Java version with jenv
+  ansible.builtin.shell: |
+    eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+    {{ homebrew_prefix }}/bin/jenv global {{ item.version | regex_replace('openjdk@', '') }}
+  with_items: "{{ java_versions }}"
+  when:
+    - item.default is defined and item.default == true
+    - current_java_version.stdout != (item.version | regex_replace('openjdk@', ''))
+  tags:
+    - java
+
+# Node.js / nvm
+- name: Install Node Versions
+  ansible.builtin.shell: >
+    source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm install {{ item.version }}
+  with_items: "{{ node_versions }}"
+  args:
+    creates: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ item.version }}"
+  tags:
+    - nodejs
+
+- name: Check current Node default version
+  ansible.builtin.shell: >
+    source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm version default
+  register: current_node_version
+  changed_when: false
+  ignore_errors: true
+  tags:
+    - nodejs
+
+- name: Set Default Node Version
+  ansible.builtin.shell: >
+    source {{ homebrew_prefix }}/opt/nvm/nvm.sh && nvm alias default {{ item.version }}
+  with_items: "{{ node_versions }}"
+  when:
+    - item.default is defined and item.default == true
+    - current_node_version.stdout != "v" + item.version
+  tags:
+    - nodejs
+
+# Python / pyenv
+- name: Install Python Versions
+  ansible.builtin.shell: >
+    pyenv install {{ item.version }}
+  with_items: "{{ python_versions }}"
+  args:
+    creates: "{{ ansible_env.HOME }}/.pyenv/versions/{{ item.version }}"
+  tags:
+    - python
+
+- name: Check current Python global version
+  ansible.builtin.shell: pyenv global
+  register: current_python_version
+  changed_when: false
+  ignore_errors: true
+  tags:
+    - python
+
+- name: Set Default Python Version
+  ansible.builtin.shell: >
+    pyenv global {{ item.version }}
+  with_items: "{{ python_versions }}"
+  when: 
+    - item.default is defined and item.default == true
+    - current_python_version.stdout != item.version
+  tags:
+    - python

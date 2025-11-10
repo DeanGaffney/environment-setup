@@ -1,0 +1,29 @@
+---
+# Workspace directory setup
+- name: Ensure workspace directory exists
+  file:
+    path: "{{ workspace_directory }}"
+    state: directory
+  tags:
+    - workspace
+
+- name: Ensure workspace personal directory exists
+  file:
+    path: "{{ personal_directory }}"
+    state: directory
+  tags:
+    - workspace
+
+- name: Ensure workspace work directory exists
+  file:
+    path: "{{ work_directory }}"
+    state: directory
+  tags:
+    - workspace
+
+- name: Ensure notes directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/notes"
+    state: directory
+  tags:
+    - notes
