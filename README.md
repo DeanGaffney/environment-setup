@@ -26,7 +26,13 @@ The setup script will automatically install:
 
 ### Quick Start
 
-On a fresh Mac, simply run:
+On a fresh Mac, run this one-liner:
+
+```bash
+git clone https://github.com/DeanGaffney/environment-setup.git && cd environment-setup/macos && bash ./setup.sh
+```
+
+Or step by step:
 
 ```bash
 # Clone this repo (macOS will prompt to install Command Line Tools if needed)
