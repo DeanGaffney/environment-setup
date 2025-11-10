@@ -116,56 +116,58 @@
         - git
     - name: Install Homebrew packages
       community.general.homebrew:
-        name:
-          - ninja
-          - libtool
-          - cmake
-          - pkg-config
-          - gettext
-          - rust
-          - go
-          - pyenv
-          - jq
-          - cfn-lint
-          - eslint_d
-          - yamlfmt
-          - awscli
-          - docker
-          - docker-compose
-          - zsh
-          - nvm
-          - gh
-          - tmux
-          - codespell
-          - shellcheck
-          - maven
-          - jenv
-          - google-java-format
-          - fzf
-          - ripgrep
-          - fd
-          - git-delta
-          - lazygit
-          - yt-dlp
-          - ffmpeg
+        name: "{{ item }}"
         state: present
+      loop:
+        - ninja
+        - libtool
+        - cmake
+        - pkg-config
+        - gettext
+        - rust
+        - go
+        - pyenv
+        - jq
+        - cfn-lint
+        - eslint_d
+        - yamlfmt
+        - awscli
+        - docker
+        - docker-compose
+        - zsh
+        - nvm
+        - gh
+        - tmux
+        - codespell
+        - shellcheck
+        - maven
+        - jenv
+        - google-java-format
+        - fzf
+        - ripgrep
+        - fd
+        - git-delta
+        - lazygit
+        - yt-dlp
+        - ffmpeg
       tags:
         - homebrew
     - name: Install Homebrew casks
       community.general.homebrew_cask:
-        name:
-          - visual-studio-code
-          - google-chrome
-          - postman
-          - wezterm
-          - rectangle
-          - font-hack-nerd-font
-          - font-ubuntu-mono-nerd-font
-          - spotify
-          - intellij-idea-ce
-          - kiro
+        name: "{{ item }}"
         state: present
         accept_external_apps: true
+      loop:
+        - visual-studio-code
+        - google-chrome
+        - postman
+        - wezterm
+        - rectangle
+        - font-hack-nerd-font
+        - font-ubuntu-mono-nerd-font
+        - spotify
+        - intellij-idea-ce
+        - kiro
       tags:
         - homebrew
     - name: Install Java Versions
@@ -186,6 +188,7 @@
         - java
     - name: Enable jenv export plugin
       ansible.builtin.shell: |
+        export PATH="{{ homebrew_prefix }}/bin:$PATH"
         eval "$(jenv init -)"
         jenv enable-plugin export
       args:

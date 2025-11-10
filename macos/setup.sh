@@ -26,11 +26,13 @@ if ! which -s brew; then
     eval "$(/usr/local/bin/brew shellenv)"
   fi
   
-  brew update --force --quiet
-  chmod -R go-w "$(brew --prefix)/share/zsh"
+  # Skip initial update to avoid git auth issues
+  export HOMEBREW_NO_AUTO_UPDATE=1
+  chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
 else
   echo "✅ Homebrew already installed"
-  brew update
+  # Skip auto-update during playbook run to avoid git auth issues
+  export HOMEBREW_NO_AUTO_UPDATE=1
 fi
 
 # Install Ansible
