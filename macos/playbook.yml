@@ -179,9 +179,8 @@
         - java
     - name: Add Java versions to jenv
       ansible.builtin.shell: |
-        export PATH="{{ homebrew_prefix }}/bin:$PATH"
-        eval "$(jenv init -)"
-        jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
+        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+        {{ homebrew_prefix }}/bin/jenv add {{ homebrew_prefix }}/opt/{{ item.version }}/libexec/openjdk.jdk/Contents/Home
       with_items: "{{ java_versions }}"
       args:
         creates: "{{ ansible_env.HOME }}/.jenv/versions/{{ item.version | regex_replace('openjdk@', '') }}"
@@ -189,18 +188,13 @@
         - java
     - name: Enable jenv export plugin
       ansible.builtin.shell: |
-        export PATH="{{ homebrew_prefix }}/bin:$PATH"
-        eval "$(jenv init -)"
-        jenv enable-plugin export
-      args:
-        creates: "{{ ansible_env.HOME }}/.jenv/plugins/export"
+        eval "$({{ homebrew_prefix }}/bin/jenv sh-enable-plugin export)" || true
       tags:
         - java
     - name: Check current Java global version
       ansible.builtin.shell: |
-        export PATH="{{ homebrew_prefix }}/bin:$PATH"
-        eval "$(jenv init -)"
-        jenv global
+        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+        {{ homebrew_prefix }}/bin/jenv global
       register: current_java_version
       changed_when: false
       ignore_errors: true
@@ -208,9 +202,8 @@
         - java
     - name: Set default Java version with jenv
       ansible.builtin.shell: |
-        export PATH="{{ homebrew_prefix }}/bin:$PATH"
-        eval "$(jenv init -)"
-        jenv global {{ item.version | regex_replace('openjdk@', '') }}
+        eval "$({{ homebrew_prefix }}/bin/jenv init -)"
+        {{ homebrew_prefix }}/bin/jenv global {{ item.version | regex_replace('openjdk@', '') }}
       with_items: "{{ java_versions }}"
       when:
         - item.default is defined and item.default == true
