@@ -15,7 +15,7 @@ else
 fi
 
 # Check if Homebrew is installed
-if ! which -s brew; then
+if ! command -v brew &> /dev/null; then
   echo "🍺 Installing Homebrew..."
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   
@@ -36,7 +36,7 @@ else
 fi
 
 # Install Ansible
-if ! which -s ansible; then
+if ! command -v ansible &> /dev/null; then
   echo "📦 Installing Ansible..."
   brew install ansible
 else
