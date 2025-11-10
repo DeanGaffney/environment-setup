@@ -332,24 +332,7 @@
         mode: '0600'
       tags:
         - nodejs
-    - name: Ensure .aws directory exists
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.aws"
-        state: directory
-        mode: '0755'
-      tags:
-        - aws
-    - name: Create AWS config file
-      ansible.builtin.copy:
-        dest: "{{ ansible_env.HOME }}/.aws/config"
-        mode: '0600'
-        content: |
-          [default]
-          region = us-east-1
-          output = json
-          cli_pager=
-      tags:
-        - aws
+
     - name: Check if git config already exists
       ansible.builtin.stat:
         path: "{{ ansible_env.HOME }}/.gitconfig.personal"
