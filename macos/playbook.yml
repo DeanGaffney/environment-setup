@@ -138,6 +138,7 @@
         - nvm
         - gh
         - tmux
+        - neovim
         - codespell
         - shellcheck
         - maven
@@ -150,6 +151,16 @@
         - lazygit
         - yt-dlp
         - ffmpeg
+        - hadolint
+        - shfmt
+        - stylua
+        - luarocks
+        - lua-language-server
+        - gopls
+        - golangci-lint
+        - yaml-language-server
+        - black
+        - flake8
       tags:
         - homebrew
     - name: Install Homebrew casks
@@ -261,17 +272,9 @@
         - current_python_version.stdout != item.version
       tags:
         - python
-    - name: Check if neovim install script exists
-      ansible.builtin.stat:
-        path: "{{ ansible_env.HOME }}/.config/nvim/install.sh"
-      register: neovim_script
-      tags:
-        - neovim
-    - name: Install Neovim
-      ansible.builtin.shell: ./install.sh
-      args:
-        chdir: "{{ ansible_env.HOME }}/.config/nvim"
-      when: neovim_script.stat.exists
+
+    - name: Pin Neovim version
+      ansible.builtin.shell: brew pin neovim
       tags:
         - neovim
     - name: Ensure notes directory exists

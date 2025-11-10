@@ -16,7 +16,7 @@ fi
 
 # Check if Homebrew is installed
 if ! command -v brew &> /dev/null; then
-  echo "🍺 Installing Homebrew..."
+  echo "Installing Homebrew..."
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   
   # Add Homebrew to PATH for Apple Silicon or Intel
@@ -30,7 +30,7 @@ if ! command -v brew &> /dev/null; then
   export HOMEBREW_NO_AUTO_UPDATE=1
   chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
 else
-  echo "✅ Homebrew already installed"
+  echo "Homebrew already installed"
   # Skip auto-update during playbook run to avoid git auth issues
   export HOMEBREW_NO_AUTO_UPDATE=1
 fi
@@ -40,11 +40,11 @@ if ! command -v ansible &> /dev/null; then
   echo "📦 Installing Ansible..."
   brew install ansible
 else
-  echo "✅ Ansible already installed"
+  echo "Ansible already installed"
 fi
 
 # Run the playbook
-echo "🎭 Running Ansible playbook..."
+echo "Running Ansible playbook..."
 ansible-playbook -i inventory playbook.yml
 
-echo "✨ Setup complete!"
+echo "Setup complete!"
