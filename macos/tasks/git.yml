@@ -155,3 +155,11 @@
   tags:
     - ssh
     - git
+
+- name: Set personal repos to SSH
+  ansible.builtin.shell: |
+    git remote set-url origin git@github.com:DeanGaffney/dotfiles.git
+    git remote set-url origin git@github.com:DeanGaffney/environment-setup.git
+  tags:
+    - ssh
+    - git
