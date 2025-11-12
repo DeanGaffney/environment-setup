@@ -156,10 +156,20 @@
     - ssh
     - git
 
-- name: Set personal repos to SSH
+- name: Set dotfiles repo to SSH
   ansible.builtin.shell: |
     git remote set-url origin git@github.com:DeanGaffney/dotfiles.git
+  args:
+    chdir: "{{ personal_directory }}/dotfiles"
+  tags:
+    - ssh
+    - git
+
+- name: Set environment-setup repo to SSH
+  ansible.builtin.shell: |
     git remote set-url origin git@github.com:DeanGaffney/environment-setup.git
+  args:
+    chdir: "{{ personal_directory }}/environment-setup"
   tags:
     - ssh
     - git
