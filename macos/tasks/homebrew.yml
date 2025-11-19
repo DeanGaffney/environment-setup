@@ -1,4 +1,3 @@
----
 # Homebrew packages and casks
 - name: Install Homebrew packages
   community.general.homebrew:
@@ -46,9 +45,9 @@
     - yamllint
     - black
     - flake8
+    - snyk-cli
   tags:
     - homebrew
-
 - name: Install Homebrew casks
   community.general.homebrew_cask:
     name: "{{ item }}"
