@@ -2,7 +2,7 @@
 # Configuration files for various tools
 - name: Ensure .m2 directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.m2"
+    path: "{{ ansible_facts.env.HOME }}/.m2"
     state: directory
     mode: '0755'
   tags:
@@ -10,7 +10,7 @@
 
 - name: Create empty Maven settings.xml
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.m2/settings.xml"
+    path: "{{ ansible_facts.env.HOME }}/.m2/settings.xml"
     state: touch
     mode: '0600'
   tags:
@@ -19,7 +19,7 @@
 
 - name: Ensure .pip directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.pip"
+    path: "{{ ansible_facts.env.HOME }}/.pip"
     state: directory
     mode: '0755'
   tags:
@@ -27,7 +27,7 @@
 
 - name: Create empty pip.conf
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.pip/pip.conf"
+    path: "{{ ansible_facts.env.HOME }}/.pip/pip.conf"
     state: touch
     mode: '0600'
   tags:
@@ -35,7 +35,7 @@
 
 - name: Create empty .npmrc
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.npmrc"
+    path: "{{ ansible_facts.env.HOME }}/.npmrc"
     state: touch
     mode: '0600'
   tags:

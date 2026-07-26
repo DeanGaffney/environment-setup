@@ -23,7 +23,7 @@
 
 - name: Ensure notes directory exists
   file:
-    path: "{{ ansible_env.HOME }}/notes"
+    path: "{{ ansible_facts.env.HOME }}/notes"
     state: directory
   tags:
     - notes

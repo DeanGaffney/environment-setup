@@ -3,7 +3,7 @@
 - name: Get tmux plugin manager
   ansible.builtin.git:
     repo: https://github.com/tmux-plugins/tpm
-    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
   tags:
     - tmux
     - git
@@ -11,7 +11,7 @@
 - name: Get Neovim Config
   ansible.builtin.git:
     repo: "https://github.com/DeanGaffney/neovim-config.git"
-    dest: "{{ ansible_env.HOME }}/.config/nvim"
+    dest: "{{ ansible_facts.env.HOME }}/.config/nvim"
   tags:
     - neovim
     - git

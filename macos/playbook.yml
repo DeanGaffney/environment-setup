@@ -3,9 +3,9 @@
   hosts: local
   become: false
   vars:
-    workspace_directory: "{{ ansible_env.HOME }}/workspace"
-    personal_directory: "{{ ansible_env.HOME }}/workspace/personal"
-    work_directory: "{{ ansible_env.HOME }}/workspace/work"
+    workspace_directory: "{{ ansible_facts.env.HOME }}/workspace"
+    personal_directory: "{{ ansible_facts.env.HOME }}/workspace/personal"
+    work_directory: "{{ ansible_facts.env.HOME }}/workspace/work"
     homebrew_prefix: "{{ '/opt/homebrew' if ansible_architecture == 'arm64' else '/usr/local' }}"
     node_versions:
       - version: 16.16.0
@@ -17,10 +17,8 @@
       - version: 3.11.4
         default: true
     java_versions:
-      - version: openjdk@11
-      - version: openjdk@17
-        default: true
       - version: openjdk@21
+        default: true
       - version: openjdk@25
   
   tasks:
