@@ -2,7 +2,7 @@
 # Git configuration and SSH setup
 - name: Check if git config already exists
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.gitconfig.personal"
+    path: "{{ ansible_facts.env.HOME }}/.gitconfig.personal"
   register: git_config_exists
   tags:
     - git
@@ -10,7 +10,7 @@
 - name: Copy base gitconfig template
   ansible.builtin.copy:
     src: "{{ personal_directory }}/dotfiles/gitconfig"
-    dest: "{{ ansible_env.HOME }}/.gitconfig"
+    dest: "{{ ansible_facts.env.HOME }}/.gitconfig"
     force: yes
   tags:
     - git
@@ -43,21 +43,21 @@
 
 - name: Configure personal Git user name
   ansible.builtin.shell: |
-    git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.name "{{ git_user_name.user_input }}"
+    git config --file {{ ansible_facts.env.HOME }}/.gitconfig.personal user.name "{{ git_user_name.user_input }}"
   when: not git_config_exists.stat.exists
   tags:
     - git
 
 - name: Configure personal Git user email
   ansible.builtin.shell: |
-    git config --file {{ ansible_env.HOME }}/.gitconfig.personal user.email "{{ git_personal_email.user_input }}"
+    git config --file {{ ansible_facts.env.HOME }}/.gitconfig.personal user.email "{{ git_personal_email.user_input }}"
   when: not git_config_exists.stat.exists
   tags:
     - git
 
 - name: Configure work Git user name
   ansible.builtin.shell: |
-    git config --file {{ ansible_env.HOME }}/.gitconfig.work user.name "{{ git_user_name.user_input }}"
+    git config --file {{ ansible_facts.env.HOME }}/.gitconfig.work user.name "{{ git_user_name.user_input }}"
   when: 
     - not git_config_exists.stat.exists
     - machine_type.user_input == "work"
@@ -66,7 +66,7 @@
 
 - name: Configure work Git user email
   ansible.builtin.shell: |
-    git config --file {{ ansible_env.HOME }}/.gitconfig.work user.email "{{ git_work_email.user_input }}"
+    git config --file {{ ansible_facts.env.HOME }}/.gitconfig.work user.email "{{ git_work_email.user_input }}"
   when: 
     - not git_config_exists.stat.exists
     - machine_type.user_input == "work"
@@ -102,7 +102,7 @@
 
 - name: Check if SSH key exists
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.ssh/id_ed25519"
+    path: "{{ ansible_facts.env.HOME }}/.ssh/id_ed25519"
   register: ssh_key
   tags:
     - ssh
@@ -110,7 +110,7 @@
 
 - name: Ensure .ssh directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.ssh"
+    path: "{{ ansible_facts.env.HOME }}/.ssh"
     state: directory
     mode: '0700'
   tags:
@@ -119,7 +119,7 @@
 
 - name: Generate SSH key for GitHub
   ansible.builtin.shell: |
-    ssh-keygen -t ed25519 -C "github-key" -f {{ ansible_env.HOME }}/.ssh/id_ed25519 -N ""
+    ssh-keygen -t ed25519 -C "github-key" -f {{ ansible_facts.env.HOME }}/.ssh/id_ed25519 -N ""
   when: not ssh_key.stat.exists
   tags:
     - ssh
@@ -127,7 +127,7 @@
 
 - name: Configure SSH to use keychain
   ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.ssh/config"
+    path: "{{ ansible_facts.env.HOME }}/.ssh/config"
     create: yes
     mode: '0600'
     block: |
@@ -141,7 +141,7 @@
 
 - name: Add SSH key to GitHub via gh CLI
   ansible.builtin.shell: |
-    gh ssh-key add {{ ansible_env.HOME }}/.ssh/id_ed25519.pub --title "{{ ansible_hostname }}-{{ machine_type.user_input }}"
+    gh ssh-key add {{ ansible_facts.env.HOME }}/.ssh/id_ed25519.pub --title "{{ ansible_hostname }}-{{ machine_type.user_input }}"
   when: not ssh_key.stat.exists
   tags:
     - ssh
@@ -150,7 +150,7 @@
 - name: Add SSH key to agent
   ansible.builtin.shell: |
     eval "$(ssh-agent -s)"
-    ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/id_ed25519
+    ssh-add --apple-use-keychain {{ ansible_facts.env.HOME }}/.ssh/id_ed25519
   when: not ssh_key.stat.exists
   tags:
     - ssh

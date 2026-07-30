@@ -2,7 +2,7 @@
 # Work-specific tasks
 - name: Ensure work config directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.config/work"
+    path: "{{ ansible_facts.env.HOME }}/.config/work"
     state: directory
     mode: '0755'
   tags:
@@ -10,7 +10,7 @@
 
 - name: Create genesys.sh work config script
   ansible.builtin.copy:
-    dest: "{{ ansible_env.HOME }}/.config/work/genesys.sh"
+    dest: "{{ ansible_facts.env.HOME }}/.config/work/genesys.sh"
     mode: '0755'
     content: |
       #!/usr/bin/env bash
@@ -21,7 +21,7 @@
 
 - name: Create empty .inin-properties file
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.inin-properties"
+    path: "{{ ansible_facts.env.HOME }}/.inin-properties"
     state: touch
     mode: '0600'
   tags:
@@ -29,7 +29,7 @@
 
 - name: Check if Bitbucket SSH key exists
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key"
+    path: "{{ ansible_facts.env.HOME }}/.ssh/genesys-bitbucket-key"
   register: bitbucket_key
   tags:
     - ssh
@@ -37,7 +37,7 @@
 
 - name: Generate SSH key for Bitbucket
   ansible.builtin.shell: |
-    ssh-keygen -t ed25519 -C "bitbucket-key" -f {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key -N ""
+    ssh-keygen -t ed25519 -C "bitbucket-key" -f {{ ansible_facts.env.HOME }}/.ssh/genesys-bitbucket-key -N ""
   when: not bitbucket_key.stat.exists
   tags:
     - ssh
@@ -45,7 +45,7 @@
 
 - name: Add Bitbucket host to SSH config
   ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.ssh/config"
+    path: "{{ ansible_facts.env.HOME }}/.ssh/config"
     create: yes
     mode: '0600'
     marker: "# {mark} ANSIBLE MANAGED BLOCK - Bitbucket"
@@ -61,14 +61,14 @@
 - name: Add Bitbucket SSH key to agent
   ansible.builtin.shell: |
     eval "$(ssh-agent -s)"
-    ssh-add --apple-use-keychain {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key
+    ssh-add --apple-use-keychain {{ ansible_facts.env.HOME }}/.ssh/genesys-bitbucket-key
   when: not bitbucket_key.stat.exists
   tags:
     - ssh
     - work
 
 - name: Display Bitbucket public key
-  ansible.builtin.shell: cat {{ ansible_env.HOME }}/.ssh/genesys-bitbucket-key.pub
+  ansible.builtin.shell: cat {{ ansible_facts.env.HOME }}/.ssh/genesys-bitbucket-key.pub
   register: bitbucket_pubkey
   when: not bitbucket_key.stat.exists
   tags:

@@ -65,6 +65,7 @@
     - intellij-idea-ce
     - kiro
     - whatsapp
-    - amazon-q
+    - docker
+    - docker-dekstop
   tags:
     - homebrew
