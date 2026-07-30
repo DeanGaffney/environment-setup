@@ -1,0 +1,11 @@
+---
+# Install shared Cursor / Kiro AI assets from this repo
+- name: Install AI assets
+  ansible.builtin.command:
+    cmd: "{{ playbook_dir }}/../ai/install-steering.sh"
+  changed_when: true
+  tags:
+    - ai
+    - steering
+    - cursor
+    - kiro

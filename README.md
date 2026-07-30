@@ -87,8 +87,24 @@ Available tags:
 - `java`, `nodejs`, `python` - Individual languages
 - `dev-tools` - tmux, neovim
 - `config` - Config files (maven, pip, npm)
+- `ai`, `steering` - Cursor rules / Kiro steering symlinks
 - `git`, `ssh` - Git and SSH setup
 - `work` - Work-specific tasks
+
+### AI steering (Cursor + Kiro)
+
+Shared agent guidance lives in `ai/steering/`. Edit the markdown once; source
+frontmatter may include keys for both tools. Install strips the wrong keys per
+tool and symlinks the results:
+
+```bash
+./ai/install-steering.sh
+```
+
+| Tool | Destination |
+| --- | --- |
+| Cursor | `~/.cursor/rules/*.mdc` |
+| Kiro | `~/.kiro/steering/*.md` |
 
 ### What Gets Installed
 
@@ -100,5 +116,6 @@ Available tags:
 - Formatters/Linters: eslint_d, yamlfmt, shellcheck, codespell
 - Build tools: Maven, CMake
 - Other: Docker, AWS CLI, Kiro
+- AI steering: Cursor rules + Kiro steering from `ai/steering/`
 
 See `playbook.yml` for the complete list.

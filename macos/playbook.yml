@@ -80,6 +80,13 @@
       tags:
         - config
 
+    # Shared Cursor / Kiro AI assets
+    - name: Setup AI
+      include_tasks: tasks/ai.yml
+      tags:
+        - ai
+        - steering
+
     # Prompt for machine type (needed for git and work tasks)
     - name: Prompt for machine type
       pause:
